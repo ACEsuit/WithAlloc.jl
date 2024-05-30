@@ -1,0 +1,13 @@
+name = "WithAlloc"
+uuid = "fb1aa66a-603c-4c1d-9bc4-66947c7b08dd"
+authors = ["Christoph Ortner <christohortner@gmail.com> and contributors"]
+version = "0.0.1-dev"
+
+[compat]
+julia = "1.6.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
