@@ -1,5 +1,6 @@
 using WithAlloc, Bumper, Test, LinearAlgebra
 
+##
 
 function mymul!(A, B, C) 
    mul!(A, B, C)
@@ -32,5 +33,40 @@ end
 end
 @test s3 ≈ s1
    
+@no_escape begin 
+   A4 = WithAlloc.@withalloc mymul!(B, C)
 
+   @show A4 ≈ A1 
+   s4 = sum(A4) 
+end
+@test s4 ≈ s1
+
+## 
+
+B = randn(5,10)
+C = randn(10, 3)
+D = randn(10, 5)
+A1 = B * C 
+A2 = B * D
+
+function mymul2!(A1, A2, B, C, D)
+   mul!(A1, B, C)
+   mul!(A2, B, D)
+   return A1, A2 
+end
+
+function WithAlloc.whatalloc(::typeof(mymul2!), B, C, D) 
+   T1 = promote_type(eltype(B), eltype(C)) 
+   T2 = promote_type(eltype(B), eltype(D))
+   return ( (T1, size(B, 1), size(C, 2)), 
+            (T2, size(B, 1), size(D, 2)) )
+end
+
+
+@no_escape begin 
+   A1b, A2b = WithAlloc.@withalloc mymul2!(B, C, D)
+
+   @show A1 ≈ A1b
+   @show A2 ≈ A2b
+end
 
