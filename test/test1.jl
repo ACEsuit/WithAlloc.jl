@@ -26,21 +26,13 @@ end
 @test s2 ≈ s1 
 
 @no_escape begin 
-   A3 = WithAlloc.@withalloc1 mymul!(B, C)
+   A3 = WithAlloc.@withalloc mymul!(B, C)
 
    @show A3 ≈ A1 
    s3 = sum(A3) 
 end
 @test s3 ≈ s1
    
-@no_escape begin 
-   A4 = WithAlloc.@withalloc mymul!(B, C)
-
-   @show A4 ≈ A1 
-   s4 = sum(A4) 
-end
-@test s4 ≈ s1
-
 ## 
 
 B = randn(5,10)
@@ -48,6 +40,7 @@ C = randn(10, 3)
 D = randn(10, 5)
 A1 = B * C 
 A2 = B * D
+s = sum(A1) + sum(A2)
 
 function mymul2!(A1, A2, B, C, D)
    mul!(A1, B, C)
@@ -68,5 +61,8 @@ end
 
    @show A1 ≈ A1b
    @show A2 ≈ A2b
+   sb = sum(A1b) + sum(A2b)
 end
+
+@test sb ≈ s
 
