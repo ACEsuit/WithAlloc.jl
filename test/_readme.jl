@@ -28,3 +28,16 @@ end
 
    @show A3 ≈ A1 
 end
+
+# ------------------------------------------------------------------------
+# Bonus: does this become non-allocating ... we can quickly check ... 
+function alloctest(B, C) 
+   @no_escape begin 
+      s3 = sum( @withalloc1 mymul!(B, C) )
+   end
+   return s3 
+end 
+
+using BenchmarkTools 
+@btime alloctest($B, $C)  
+# 125.284 ns (0 allocations: 0 bytes)
