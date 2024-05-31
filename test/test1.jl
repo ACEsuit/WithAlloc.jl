@@ -47,6 +47,8 @@ end
    
 ## 
 
+# multiple allocations 
+
 B = randn(5,10)
 C = randn(10, 3)
 D = randn(10, 5)
@@ -90,3 +92,53 @@ nalloc2 = let
 end
 
 @show nalloc2
+
+
+##
+# multiple allocations of different type 
+
+B = randn(5,10)
+C = randn(10, 3)
+D = randn(3)
+A1 = B * C 
+A2 = A1 * D 
+s = sum(A1) + sum(A2)
+
+function mymul3!(A1, A2, B, C, D)
+   mul!(A1, B, C)
+   mul!(A2, A1, D)
+   return A1, A2 
+end
+
+function WithAlloc.whatalloc(::typeof(mymul3!), B, C, D) 
+   T1 = promote_type(eltype(B), eltype(C)) 
+   T2 = promote_type(T1, eltype(D))
+   return ( (T1, size(B, 1), size(C, 2)), 
+            (T2, size(B, 1)) )
+end
+
+
+@no_escape begin 
+   A1b, A2b = WithAlloc.@withalloc mymul3!(B, C, D)
+   @show A1 ≈ A1b
+   @show A2 ≈ A2b
+   sb = sum(A1b) + sum(A2b)
+end
+
+@test sb ≈ s
+
+## allocation test
+
+alloctest3(B, C, D) = 
+      (@no_escape begin sum(sum.( @withalloc mymul3!(B, C, D) )); end)
+
+nalloc3 = let    
+   B = randn(5,10)
+   C = randn(10, 3)
+   D = randn(10, 5)
+   @allocated alloctest2(B, C, D)
+end
+
+@show nalloc3
+
+

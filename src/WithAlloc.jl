@@ -9,8 +9,8 @@ function whatalloc end
    (Bumper.alloc!(Bumper.default_buffer(), allocinfo...), )
 end
 
-@inline function _bumper_alloc(allocinfo::Tuple)
-   ntuple(i -> _bumper_alloc(allocinfo[i])[1], length(allocinfo))
+@inline function _bumper_alloc(allocinfo)
+   map( a -> _bumper_alloc(a)[1], allocinfo )
 end
 
 macro withalloc(ex)
