@@ -25,7 +25,6 @@ end
 # but the same pattern will be repreated over and over so ... 
 @no_escape begin 
    A3 = @withalloc mymul!(B, C)
-
    @show A3 ≈ A1 
 end
 
@@ -59,15 +58,15 @@ end
 #        there currently seems to be a bug in @withalloc for more than a singl 
 #        allocation. 
 
-using WithAlloc, LinearAlgebra, Bumper, BenchmarkTools 
+using WithAlloc, LinearAlgebra, Bumper 
 
 mymul!(A, B, C) = mul!(A, B, C)
 
 WithAlloc.whatalloc(::typeof(mymul!), B, C) = 
           (promote_type(eltype(B), eltype(C)), size(B, 1), size(C, 2))
 
-alloctest(B, C) = (
-   @no_escape begin sum( @withalloc mymul!(B, C) ) end )
+nalloc = let B = randn(5,10), C = randn(10, 3)
+   @allocated sum( @withalloc mymul!(B, C) )
+end          
 
-B = randn(5,10); C = randn(10, 3)
-@btime alloctest($B, $C)       #   135.246 ns (0 allocations: 0 bytes)
+@show nalloc

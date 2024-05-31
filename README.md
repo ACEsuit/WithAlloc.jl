@@ -6,27 +6,27 @@
 
 This package implements a very small extension to [Bumper.jl](https://github.com/MasonProtter/Bumper.jl). 
 
-A common pattern in our own (the developers') codes is the following: 
+Bumper strongly enourages (almost enforces) that it is used purely from within `@no_escape` blocks. Bumper-allocating an array in a function and passing it back to the caller should generally be avoided. This results in a common pattern: 
 ```julia
 @no_escape begin 
    # determine the type and size a required array
-   T, N = determine_array(args)
+   T, N = determine_array(x1, x2, x3)
    # preallocate some arrays
    A = @alloc(T, N)
    # do a computation on A 
-   calculate_something!(A, args)
+   calculate_something!(A, x1, x2, x3)
 end 
 ```
-After writing the same pattern 10 times, we wondered whether there is an easy way to wrap this and the result is the present package. It allows us to replace the above 3 lines with 
+The goal of `WithAlloc.jl` is to replace the above 3 lines with 
 ```julia 
 @no_escape begin 
-   A = @withalloc calculate_something!(more, args)
+   A = @withalloc calculate_something!(x1, x2, x3)
 end
 ```
 
 ### Preliminary Documentation
 
-For now, there is are just a few simple use-case examples.
+For now, there is are just a few simple use-case examples. Proper documentation will follow once the packages has been tested a bit and there is some agreement it will be long-term useful. 
 ```julia
 using WithAlloc, LinearAlgebra, Bumper 
 
@@ -55,7 +55,6 @@ end
 # but the same pattern will be repreated over and over so ... 
 @no_escape begin 
    A3 = @withalloc mymul!(B, C)
-
    @show A3 ≈ A1 
 end
 
@@ -82,23 +81,21 @@ end
    A1b, A2b = WithAlloc.@withalloc mymul2!(B, C, D)
    @show A1 ≈ A1b, A2 ≈ A2b   # true, true 
 end
-
-
 ``` 
 
 This approach should become non-allocating, which we can quickly check. 
 There currently seems to be a bug in `@withalloc` for more than a single allocation though. 
 ```julia
-using WithAlloc, LinearAlgebra, Bumper, BenchmarkTools 
+using WithAlloc, LinearAlgebra, Bumper 
 
 mymul!(A, B, C) = mul!(A, B, C)
 
 WithAlloc.whatalloc(::typeof(mymul!), B, C) = 
           (promote_type(eltype(B), eltype(C)), size(B, 1), size(C, 2))
 
-alloctest(B, C) = (
-   @no_escape begin sum( @withalloc mymul!(B, C) ) end )
+nalloc = let B = randn(5,10), C = randn(10, 3)
+   @allocated sum( @withalloc mymul!(B, C) )
+end          
 
-B = randn(5,10); C = randn(10, 3)
-@btime alloctest($B, $C)       #   135.246 ns (0 allocations: 0 bytes)
+@show nalloc
 ```
