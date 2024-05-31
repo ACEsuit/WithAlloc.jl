@@ -41,3 +41,26 @@ end
 using BenchmarkTools 
 @btime alloctest($B, $C)  
 # 125.284 ns (0 allocations: 0 bytes)
+# ------------------------------------------------------------------------
+
+# Multiple arrays is handled via tuples: 
+
+B = randn(5,10)
+C = randn(10, 3)
+D = randn(10, 5)
+A1 = B * C 
+A2 = B * D
+
+mymul2!(A1, A2, B, C, D) = mul!(A1, B, C), mul!(A2, B, D)
+
+function WithAlloc.whatalloc(::typeof(mymul2!), B, C, D) 
+   T1 = promote_type(eltype(B), eltype(C)) 
+   T2 = promote_type(eltype(B), eltype(D))
+   return ( (T1, size(B, 1), size(C, 2)), 
+            (T2, size(B, 1), size(D, 2)) )
+end
+
+@no_escape begin 
+   A1b, A2b = WithAlloc.@withalloc mymul2!(B, C, D)
+   @show A1 ≈ A1b, A2 ≈ A2b   # true, true 
+end

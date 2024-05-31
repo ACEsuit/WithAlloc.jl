@@ -6,8 +6,6 @@
 
 This package implements a very small extension to [Bumper.jl](https://github.com/MasonProtter/Bumper.jl). 
 
-### Introduction and Motivation 
-
 A common pattern in our own (the developers') codes is the following: 
 ```julia
 @no_escape begin 
@@ -26,9 +24,9 @@ After writing the same pattern 10 times, we wondered whether there is an easy wa
 end
 ```
 
-### Documentation
+### Preliminary Documentation
 
-For now, there is just a simple example. More soon ... 
+For now, there is are just a few simple use-case examples.
 ```julia
 using WithAlloc, LinearAlgebra, Bumper 
 
