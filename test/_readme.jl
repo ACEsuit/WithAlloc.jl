@@ -30,18 +30,6 @@ end
 end
 
 # ------------------------------------------------------------------------
-# Bonus: does this become non-allocating ... we can quickly check ... 
-function alloctest(B, C) 
-   @no_escape begin 
-      s3 = sum( @withalloc1 mymul!(B, C) )
-   end
-   return s3 
-end 
-
-using BenchmarkTools 
-@btime alloctest($B, $C)  
-# 125.284 ns (0 allocations: 0 bytes)
-# ------------------------------------------------------------------------
 
 # Multiple arrays is handled via tuples: 
 
@@ -64,3 +52,32 @@ end
    A1b, A2b = WithAlloc.@withalloc mymul2!(B, C, D)
    @show A1 ≈ A1b, A2 ≈ A2b   # true, true 
 end
+
+
+# ------------------------------------------------------------------------
+# Bonus: does this become non-allocating ... we can quickly check ... 
+#        there currently seems to be a bug in @withalloc, which is 
+#        not occurring in @withalloc1.
+
+using WithAlloc, LinearAlgebra, Bumper, BenchmarkTools 
+
+mymul!(A, B, C) = mul!(A, B, C)
+
+WithAlloc.whatalloc(::typeof(mymul!), B, C) = 
+          (promote_type(eltype(B), eltype(C)), size(B, 1), size(C, 2))
+
+function alloctest1(B, C) 
+   @no_escape begin 
+      s3 = sum( @withalloc1 mymul!(B, C) )
+   end
+end 
+
+function alloctest(B, C) 
+   @no_escape begin 
+      s3 = sum( @withalloc mymul!(B, C) )
+   end
+end 
+
+B = randn(5,10); C = randn(10, 3)
+@btime alloctest($B, $C)       #   243.056 ns (2 allocations: 64 bytes)
+@btime alloctest1($B, $C)      #   106.551 ns (0 allocations: 0 bytes)
