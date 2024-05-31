@@ -5,35 +5,21 @@ export whatalloc, @withalloc
 
 function whatalloc end 
 
+
 macro withalloc1(ex)
-
-   out_obj = ex.args[1]
-   out_obj_info = Symbol("$(out_obj)_alloc_info")
-   excall = ex.args[2] 
-
-   # Create expressions
-   # out_obj_info = whatalloc(somecalculation!, x1, x2, ...)
-   l1 = Expr(:call, :(=), out_obj_info, Expr(:call, :whatalloc, excall.args...)  )
-   @show l1
-
-   # A = @alloc(out_obj_info...)
-   l2 = Expr(:(=), out_obj, Expr(:macrocall, Symbol("@alloc"), Symbol("# empty #"), Expr(:..., out_obj_info) ) )
-   @show l2
-
-   # samecalculation!(out_obj, x1, x2, ...)
-   l3 = Expr(:(=), out_obj, 
-            Expr(:call, excall.args[1], out_obj, excall.args[2:end]... ))
-   @show l3
-
-   # Create the final expression
+   fncall = esc(ex.args[1])
+   args = esc.(ex.args[2:end])
    quote
-      $l1
-      $l2
-      $l3
+      let 
+         allocinfo = whatalloc($fncall, $(args...), )
+         storobj = Bumper.alloc!(Bumper.default_buffer(), allocinfo... )
+         $(fncall)(storobj, $(args...), )
+      end
    end
 end
 
 
+# Teemu's original draft, slightly edited 
 # macro withalloc(ex)
 #    # Create symbols based on imput
 #    out_obj = Symbol( "out_" * String(ex.args[2]) )
