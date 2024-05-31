@@ -72,6 +72,18 @@ function alloctest1(B, C)
    end
 end 
 
+function alloctest2(B, C) 
+   @no_escape begin 
+      # allocinfo = WithAlloc.whatalloc(mymul!, B, C)
+      # A = ( (@alloc(allocinfo...)), )
+      # A = WithAlloc._bumper_alloc(allocinfo)
+      # A = (Bumper.alloc!(Bumper.default_buffer(), allocinfo... ), )
+      # s3 = sum( mymul!(A..., B, C) )
+      s3 = sum( @withalloc mymul!(B, C) )
+   end
+end 
+
+
 function alloctest(B, C) 
    @no_escape begin 
       s3 = sum( @withalloc mymul!(B, C) )
@@ -81,3 +93,4 @@ end
 B = randn(5,10); C = randn(10, 3)
 @btime alloctest($B, $C)       #   243.056 ns (2 allocations: 64 bytes)
 @btime alloctest1($B, $C)      #   106.551 ns (0 allocations: 0 bytes)
+@btime alloctest2($B, $C)

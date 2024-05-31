@@ -32,6 +32,19 @@ end
    s3 = sum(A3) 
 end
 @test s3 ≈ s1
+
+## allocation test 
+
+alloctest(B, C) = (@no_escape begin sum( @withalloc mymul!(B, C) ); end)
+
+nalloc = let    
+   B = randn(5,10)
+   C = randn(10, 3)
+   @allocated alloctest(B, C)
+end
+
+@test nalloc == 0
+
    
 ## 
 
@@ -66,3 +79,16 @@ end
 
 @test sb ≈ s
 
+## allocation test
+
+alloctest2(B, C, D) = 
+         (@no_escape begin sum(sum.( @withalloc mymul2!(B, C, D) )); end)
+
+nalloc2 = let    
+   B = randn(5,10)
+   C = randn(10, 3)
+   D = randn(10, 5)
+   @allocated alloctest2(B, C, D)
+end
+
+@btime alloctest2($B, $C, $D)
