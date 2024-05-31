@@ -24,7 +24,7 @@ end
 
 # but the same pattern will be repreated over and over so ... 
 @no_escape begin 
-   A3 = @withalloc1 mymul!(B, C)
+   A3 = @withalloc mymul!(B, C)
 
    @show A3 ≈ A1 
 end
@@ -56,8 +56,8 @@ end
 
 # ------------------------------------------------------------------------
 # Bonus: does this become non-allocating ... we can quickly check ... 
-#        there currently seems to be a bug in @withalloc, which is 
-#        not occurring in @withalloc1.
+#        there currently seems to be a bug in @withalloc for more than a singl 
+#        allocation. 
 
 using WithAlloc, LinearAlgebra, Bumper, BenchmarkTools 
 
@@ -66,31 +66,8 @@ mymul!(A, B, C) = mul!(A, B, C)
 WithAlloc.whatalloc(::typeof(mymul!), B, C) = 
           (promote_type(eltype(B), eltype(C)), size(B, 1), size(C, 2))
 
-function alloctest1(B, C) 
-   @no_escape begin 
-      s3 = sum( @withalloc1 mymul!(B, C) )
-   end
-end 
-
-function alloctest2(B, C) 
-   @no_escape begin 
-      # allocinfo = WithAlloc.whatalloc(mymul!, B, C)
-      # A = ( (@alloc(allocinfo...)), )
-      # A = WithAlloc._bumper_alloc(allocinfo)
-      # A = (Bumper.alloc!(Bumper.default_buffer(), allocinfo... ), )
-      # s3 = sum( mymul!(A..., B, C) )
-      s3 = sum( @withalloc mymul!(B, C) )
-   end
-end 
-
-
-function alloctest(B, C) 
-   @no_escape begin 
-      s3 = sum( @withalloc mymul!(B, C) )
-   end
-end 
+alloctest(B, C) = (
+   @no_escape begin sum( @withalloc mymul!(B, C) ) end )
 
 B = randn(5,10); C = randn(10, 3)
-@btime alloctest($B, $C)       #   243.056 ns (2 allocations: 64 bytes)
-@btime alloctest1($B, $C)      #   106.551 ns (0 allocations: 0 bytes)
-@btime alloctest2($B, $C)
+@btime alloctest($B, $C)       #   135.246 ns (0 allocations: 0 bytes)

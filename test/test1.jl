@@ -27,7 +27,6 @@ end
 
 @no_escape begin 
    A3 = WithAlloc.@withalloc mymul!(B, C)
-
    @show A3 ≈ A1 
    s3 = sum(A3) 
 end
@@ -71,7 +70,6 @@ end
 
 @no_escape begin 
    A1b, A2b = WithAlloc.@withalloc mymul2!(B, C, D)
-
    @show A1 ≈ A1b
    @show A2 ≈ A2b
    sb = sum(A1b) + sum(A2b)
@@ -91,4 +89,4 @@ nalloc2 = let
    @allocated alloctest2(B, C, D)
 end
 
-@btime alloctest2($B, $C, $D)
+@show nalloc2
