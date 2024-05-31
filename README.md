@@ -22,9 +22,42 @@ end
 After writing the same pattern 10 times, we wondered whether there is an easy way to wrap this and the result is the present package. It allows us to replace the above 3 lines with 
 ```julia 
 @no_escape begin 
-   A = @with_alloc calculate_something!(more, args)
+   A = @withalloc calculate_something!(more, args)
 end
 ```
 
 ### Documentation
 
+For now, there is just a simple example. More soon ... 
+```julia
+using WithAlloc, LinearAlgebra, Bumper 
+
+# simple allocating operation
+B = randn(5,10)
+C = randn(10, 3)
+A1 = B * C
+s1 = sum(A1)
+
+# we wrap mul! into a new function so we don't become pirates...
+mymul!(A, B, C) = mul!(A, B, C)
+
+# tell `WithAlloc` how to allocate memory for `mymul!`
+WithAlloc.whatalloc(::typeof(mymul!), B, C) = 
+          (promote_type(eltype(B), eltype(C)), size(B, 1), size(C, 2))
+
+# the "naive use" of automated pre-allocation could look like this: 
+@no_escape begin 
+   A2_alloc_info = WithAlloc.whatalloc(mymul!, B, C)
+   A2 = @alloc(A2_alloc_info...)
+   mymul!(A2, B, C)
+
+   @show A2 ≈ A1
+end
+
+# but the same pattern will be repreated over and over so ... 
+@no_escape begin 
+   A3 = @withalloc1 mymul!(B, C)
+
+   @show A3 ≈ A1 
+end
+```

@@ -1,7 +1,7 @@
 module WithAlloc
 
 using Bumper 
-export whatalloc, @withalloc 
+export whatalloc, @withalloc1 
 
 function whatalloc end 
 
