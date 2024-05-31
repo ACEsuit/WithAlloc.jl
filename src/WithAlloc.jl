@@ -17,6 +17,8 @@ macro withalloc(ex)
    fncall = esc(ex.args[1])
    args = esc.(ex.args[2:end])
    quote
+      # not sure why this isn't working ... 
+      # whatalloc($fncall, $(args...))
       let 
          allocinfo = whatalloc($fncall, $(args...), )
          storobj = _bumper_alloc(allocinfo)
@@ -24,6 +26,13 @@ macro withalloc(ex)
       end
    end
 end
+
+
+@inline function withalloc(fncall, args...) 
+   allocinfo = whatalloc(fncall, args..., )
+   storobj = _bumper_alloc(allocinfo)
+   fncall(storobj..., args..., )
+end 
 
 
 end 

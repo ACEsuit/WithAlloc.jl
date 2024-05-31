@@ -32,18 +32,29 @@ end
 end
 @test s3 ≈ s1
 
+@no_escape begin 
+   A4 = WithAlloc.withalloc(mymul!, B, C)
+   @show A4 ≈ A1 
+   s4 = sum(A4) 
+end
+@test s4 ≈ s1
+
 ## allocation test 
 
 alloctest(B, C) = (@no_escape begin sum( @withalloc mymul!(B, C) ); end)
+alloctest_nm(B, C) = (@no_escape begin sum( WithAlloc.withalloc(mymul!, B, C) ); end)
 
 nalloc = let    
-   B = randn(5,10)
-   C = randn(10, 3)
+   B = randn(5,10); C = randn(10, 3)
    @allocated alloctest(B, C)
 end
-
 @test nalloc == 0
 
+nalloc_nm = let    
+   B = randn(5,10); C = randn(10, 3)
+   @allocated alloctest_nm(B, C)
+end
+@test nalloc_nm == 0
    
 ## 
 
@@ -71,27 +82,41 @@ end
 
 
 @no_escape begin 
-   A1b, A2b = WithAlloc.@withalloc mymul2!(B, C, D)
+   A1b, A2b = @withalloc mymul2!(B, C, D)
    @show A1 ≈ A1b
    @show A2 ≈ A2b
    sb = sum(A1b) + sum(A2b)
 end
 
-@test sb ≈ s
+@no_escape begin 
+   A1c, A2c = WithAlloc.withalloc(mymul2!, B, C, D)
+   @show A1 ≈ A1c
+   @show A2 ≈ A2c
+   sc = sum(A1b) + sum(A2b)
+end
+
+@test sc ≈ s
 
 ## allocation test
 
 alloctest2(B, C, D) = 
          (@no_escape begin sum(sum.( @withalloc mymul2!(B, C, D) )); end)
 
+alloctest2_nm(B, C, D) = 
+         (@no_escape begin sum(sum.( WithAlloc.withalloc(mymul2!, B, C, D) )); end)
+
 nalloc2 = let    
-   B = randn(5,10)
-   C = randn(10, 3)
-   D = randn(10, 5)
+   B = randn(5,10); C = randn(10, 3); D = randn(10, 5)
    @allocated alloctest2(B, C, D)
 end
+@show nalloc2  # 64
 
-@show nalloc2
+nalloc2_nm = let    
+   B = randn(5,10); C = randn(10, 3); D = randn(10, 5)
+   @allocated alloctest2_nm(B, C, D)
+end
+@show nalloc2_nm  # 64
+
 
 
 ##
@@ -139,6 +164,6 @@ nalloc3 = let
    @allocated alloctest2(B, C, D)
 end
 
-@show nalloc3
+@show nalloc3   # 64
 
 
