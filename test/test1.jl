@@ -109,13 +109,13 @@ nalloc2 = let
    B = randn(5,10); C = randn(10, 3); D = randn(10, 5)
    @allocated alloctest2(B, C, D)
 end
-@show nalloc2  # 64
+@test nalloc2 == 0
 
 nalloc2_nm = let    
    B = randn(5,10); C = randn(10, 3); D = randn(10, 5)
    @allocated alloctest2_nm(B, C, D)
 end
-@show nalloc2_nm  # 64
+@test nalloc2_nm == 0
 
 
 
@@ -164,6 +164,50 @@ nalloc3 = let
    @allocated alloctest2(B, C, D)
 end
 
-@show nalloc3   # 64
+@test nalloc3 == 0
 
 
+
+
+## Reproduce #1 
+
+using WithAlloc, LinearAlgebra, Bumper, BenchmarkTools 
+
+mymul2!(A1, A2, B, C, D) = mul!(A1, B, C), mul!(A2, B, D)
+
+function WithAlloc.whatalloc(::typeof(mymul2!), B, C, D) 
+   T1 = promote_type(eltype(B), eltype(C))
+   T2 = promote_type(eltype(B), eltype(D))
+   return ( (T1, size(B, 1), size(C, 2)), 
+            (T2, size(B, 1), size(D, 2)) )
+end
+
+function alloctest1(B, C, D) 
+   @no_escape begin 
+      a1, a2 = WithAlloc.whatalloc(mymul2!, B, C, D)
+      A1 = @alloc(a1...)
+      A2 = @alloc(a2...)
+      mymul2!(A1, A2, B, C, D) 
+      sum(A1) + sum(A2)
+   end
+end 
+
+function alloctest2(B, C, D) 
+   @no_escape begin 
+      A1, A2 = @withalloc mymul2!(B, C, D) 
+      sum(A1) + sum(A2)
+   end
+end 
+
+function alloctest3(B, C, D) 
+   @no_escape begin 
+      A1, A2 = WithAlloc.withalloc(mymul2!, B, C, D) 
+      sum(A1) + sum(A2)
+   end
+end 
+
+
+B = randn(5,10); C = randn(10, 3); D = randn(10, 5)
+@btime alloctest1($B, $C, $D)
+@btime alloctest2($B, $C, $D)
+@btime alloctest3($B, $C, $D)
