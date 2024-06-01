@@ -44,6 +44,7 @@ WithAlloc.whatalloc(::typeof(mymul!), B, C) =
           (promote_type(eltype(B), eltype(C)), size(B, 1), size(C, 2))
 
 # the "naive use" of automated pre-allocation could look like this: 
+# This is essentially the code that the macro @withalloc generates
 @no_escape begin 
    A2_alloc_info = WithAlloc.whatalloc(mymul!, B, C)
    A2 = @alloc(A2_alloc_info...)
@@ -84,7 +85,6 @@ end
 ``` 
 
 This approach should become non-allocating, which we can quickly check. 
-There currently seems to be a bug in `@withalloc` for more than a single allocation though. 
 ```julia
 using WithAlloc, LinearAlgebra, Bumper 
 
@@ -97,5 +97,5 @@ nalloc = let B = randn(5,10), C = randn(10, 3)
    @allocated sum( @withalloc mymul!(B, C) )
 end          
 
-@show nalloc
+@show nalloc  # 0 
 ```

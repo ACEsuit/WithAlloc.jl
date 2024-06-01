@@ -14,6 +14,7 @@ WithAlloc.whatalloc(::typeof(mymul!), B, C) =
           (promote_type(eltype(B), eltype(C)), size(B, 1), size(C, 2))
 
 # the "naive use" of automated pre-allocation could look like this: 
+# (this is essentially the code that the macro generates)
 @no_escape begin 
    A2_alloc_info = WithAlloc.whatalloc(mymul!, B, C)
    A2 = @alloc(A2_alloc_info...)
@@ -53,10 +54,9 @@ end
 end
 
 
+
 # ------------------------------------------------------------------------
 # Bonus: does this become non-allocating ... we can quickly check ... 
-#        there currently seems to be a bug in @withalloc for more than a singl 
-#        allocation. 
 
 using WithAlloc, LinearAlgebra, Bumper 
 
