@@ -32,7 +32,6 @@ using WithAlloc, LinearAlgebra, Bumper
 B = randn(5,10)
 C = randn(10, 3)
 A1 = B * C
-s1 = sum(A1)
 
 # we wrap mul! into a new function so we don't become pirates...
 mymul!(A, B, C) = mul!(A, B, C)
