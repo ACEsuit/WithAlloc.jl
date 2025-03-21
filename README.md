@@ -4,9 +4,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ACEsuit.github.io/WithAlloc.jl/dev/) -->
 [![Build Status](https://github.com/ACEsuit/WithAlloc.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ACEsuit/WithAlloc.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-This package implements a very small extension to [Bumper.jl](https://github.com/MasonProtter/Bumper.jl). It is currently registered in the [ACE Registry](https://github.com/ACEsuit/ACEregistry) but not yet the general registry. To test it out either install the ACE registry or just clone it. 
-
-Bumper strongly enourages (almost enforces) that it is used purely from within `@no_escape` blocks. Bumper-allocating an array in a function and passing it back to the caller should generally be avoided. This results in a common pattern: 
+This package implements a very small extension to [Bumper.jl](https://github.com/MasonProtter/Bumper.jl). Bumper strongly enourages (almost enforces) that it is used purely from within `@no_escape` blocks. Bumper-allocating an array in a function and passing it back to the caller should generally be avoided. This results in a common pattern: 
 ```julia
 @no_escape begin 
    # determine the type and size a required array
@@ -26,7 +24,7 @@ end
 
 ### Preliminary Documentation
 
-For now, there is are just a few simple use-case examples. Proper documentation will follow once the packages has been tested a bit and there is some agreement it will be long-term useful. 
+For now, there are just a few simple use-case examples. Proper documentation will follow once the packages has been tested a bit and there is some agreement it will be long-term useful. 
 ```julia
 using WithAlloc, LinearAlgebra, Bumper 
 
@@ -34,7 +32,6 @@ using WithAlloc, LinearAlgebra, Bumper
 B = randn(5,10)
 C = randn(10, 3)
 A1 = B * C
-s1 = sum(A1)
 
 # we wrap mul! into a new function so we don't become pirates...
 mymul!(A, B, C) = mul!(A, B, C)
